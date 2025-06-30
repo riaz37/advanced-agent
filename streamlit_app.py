@@ -52,4 +52,4 @@ if run_button and query:
         st.write("No analysis generated.")
 
 st.markdown("---")
-st.caption("Built with ❤️ using Streamlit, LangChain, Langgraph and Gemini.") 
+st.caption("Built with ❤️ by Riaz.") 
