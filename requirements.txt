@@ -1,9 +1,9 @@
 firecrawl-py
-langchain>=0.1.0
-langchain-core>=0.1.0
+langchain
+langchain-core
 langchain-google-genai
-langgraph>=0.0.40
-pydantic>=2.0.0
+langgraph
+pydantic
 python-dotenv
 streamlit
-typing-extensions>=4.5.0
+typing-extensions
