@@ -1,0 +1,7 @@
+firecrawl-py
+langchain
+langchain-google-genai
+langgraph
+pydantic
+python-dotenv
+streamlit
