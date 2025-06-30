@@ -1,5 +1,5 @@
 import streamlit as st
-from src.worlflow import Workflow
+from src.workflow import Workflow
 from src.models import ResearchState
 
 st.set_page_config(page_title="Developer Tools Research Agent", layout="wide")
