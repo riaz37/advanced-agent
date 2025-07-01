@@ -1,9 +1,13 @@
 firecrawl-py
 langchain
 langchain-core
+langchain-community
 langchain-google-genai
 langgraph
+langsmith
 pydantic
 python-dotenv
 streamlit
 typing-extensions
+aiohttp
+httpx
