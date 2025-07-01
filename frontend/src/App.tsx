@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Search, Loader2, ExternalLink, Code, DollarSign, Users } from 'lucide-react'
 import axios from 'axios'
 import './App.css'
@@ -27,11 +27,57 @@ interface ResearchResponse {
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
+const loadingMessages = [
+  "🔍 Analyzing your query...",
+  "🌐 Searching the web for tools...",
+  "🤖 AI is processing the data...",
+  "📊 Structuring the results...",
+  "✨ Almost ready with insights...",
+  "🚀 Finalizing your research..."
+]
+
+const funFacts = [
+  "💡 Did you know? The first web browser was called WorldWideWeb!",
+  "🎯 Fun fact: JavaScript was created in just 10 days!",
+  "⚡ Cool! React was originally created for Facebook's newsfeed.",
+  "🔧 Interesting: Git was created by Linus Torvalds in 2005.",
+  "📱 Amazing: The first iPhone app was released in 2008!",
+  "🌟 Wow! Stack Overflow gets 50+ million visitors monthly!"
+]
+
 function App() {
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<ResearchResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [loadingStep, setLoadingStep] = useState(0)
+  const [currentFact, setCurrentFact] = useState(0)
+
+  // Loading progression effect
+  useEffect(() => {
+    let stepInterval: NodeJS.Timeout
+    let factInterval: NodeJS.Timeout
+
+    if (loading) {
+      // Progress through loading steps
+      stepInterval = setInterval(() => {
+        setLoadingStep(prev => (prev + 1) % loadingMessages.length)
+      }, 2000)
+
+      // Rotate fun facts
+      factInterval = setInterval(() => {
+        setCurrentFact(prev => (prev + 1) % funFacts.length)
+      }, 4000)
+    } else {
+      setLoadingStep(0)
+      setCurrentFact(0)
+    }
+
+    return () => {
+      clearInterval(stepInterval)
+      clearInterval(factInterval)
+    }
+  }, [loading])
 
   const handleSearch = async () => {
     if (!query.trim() || query.trim().length < 3) {
@@ -56,60 +102,129 @@ function App() {
     }
   }
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !loading) {
-      handleSearch()
-    }
-  }
+
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="max-w-7xl mx-auto px-4 py-12">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            🔎 Developer Tools Research Agent
+        <div className="text-center mb-16 animate-fade-in">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl mb-6 shadow-lg">
+            <Search className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-6xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-6 leading-tight">
+            Developer Tools Research
           </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Research and compare developer tools using advanced LLM and web research workflows.
-            Enter your query (e.g., "API monitoring tools") and get structured, actionable insights.
+          <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
+            Discover and analyze developer tools with AI-powered research workflows.
+            <br />
+            <span className="text-slate-500">Enter your query and get structured, actionable insights.</span>
           </p>
         </div>
 
         {/* Search Section */}
-        <div className="max-w-2xl mx-auto mb-8">
-          <div className="flex gap-2">
-            <div className="flex-1 relative">
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Enter your research query..."
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                disabled={loading}
-              />
-              <Search className="absolute right-3 top-3.5 h-5 w-5 text-gray-400" />
+        <div className="max-w-4xl mx-auto mb-12">
+          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 relative">
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && !loading && handleSearch()}
+                  placeholder="Enter your research query (e.g., 'API monitoring tools')..."
+                  className="w-full px-6 py-4 text-lg border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all duration-200 bg-white/80 placeholder:text-slate-400"
+                  disabled={loading}
+                />
+                <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-6 h-6" />
+              </div>
+              <button
+                onClick={handleSearch}
+                disabled={loading || !query.trim() || query.trim().length < 3}
+                className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-lg font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 min-w-[140px]"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Researching...
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-5 h-5" />
+                    Research
+                  </>
+                )}
+              </button>
             </div>
-            <button
-              onClick={handleSearch}
-              disabled={loading || !query.trim()}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Researching...
-                </>
-              ) : (
-                'Research'
-              )}
-            </button>
+
+            {/* Quick examples */}
+            <div className="mt-6 flex flex-wrap gap-2 justify-center">
+              <span className="text-sm text-slate-500">Try:</span>
+              {['API monitoring tools', 'React state management', 'Database ORMs'].map((example) => (
+                <button
+                  key={example}
+                  onClick={() => setQuery(example)}
+                  className="px-3 py-1 text-sm bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full transition-colors duration-200 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled={loading}
+                >
+                  {example}
+                </button>
+              ))}
+            </div>
+
+            {error && (
+              <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
+                <p className="text-red-600 text-sm font-medium">{error}</p>
+              </div>
+            )}
           </div>
-          {error && (
-            <p className="text-red-600 mt-2 text-sm">{error}</p>
-          )}
         </div>
+
+        {/* Engaging Loading Section */}
+        {loading && (
+          <div className="max-w-4xl mx-auto mb-12">
+            <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 text-center animate-fade-in">
+              {/* Main loading animation */}
+              <div className="flex justify-center mb-6">
+                <div className="relative">
+                  <div className="w-16 h-16 border-4 border-blue-200 rounded-full animate-spin border-t-blue-600"></div>
+                  <div className="absolute inset-0 w-16 h-16 border-4 border-transparent rounded-full animate-ping border-t-purple-400"></div>
+                </div>
+              </div>
+
+              {/* Loading message */}
+              <h3 className="text-2xl font-semibold text-slate-700 mb-4 animate-pulse">
+                {loadingMessages[loadingStep]}
+              </h3>
+
+              {/* Progress bar */}
+              <div className="w-full bg-slate-200 rounded-full h-2 mb-6 overflow-hidden">
+                <div
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-1000 ease-out"
+                  style={{ width: `${((loadingStep + 1) / loadingMessages.length) * 100}%` }}
+                ></div>
+              </div>
+
+              {/* Fun fact */}
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 border border-blue-100">
+                <p className="text-slate-600 text-lg animate-slide-up">
+                  {funFacts[currentFact]}
+                </p>
+              </div>
+
+              {/* Floating dots animation */}
+              <div className="flex justify-center mt-6 space-x-2">
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className="w-3 h-3 bg-blue-400 rounded-full animate-bounce"
+                    style={{ animationDelay: `${i * 0.2}s` }}
+                  ></div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Results Section */}
         {result && (
@@ -143,7 +258,7 @@ function App() {
                 </h2>
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                   {result.companies.map((company, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div key={index} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all duration-200 hover:border-blue-200 cursor-default">
                       <div className="flex items-start justify-between mb-3">
                         <h3 className="text-lg font-semibold text-gray-900">{company.name}</h3>
                         {company.website && (
@@ -151,7 +266,8 @@ function App() {
                             href={company.website}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800"
+                            className="text-blue-600 hover:text-blue-800 cursor-pointer transition-colors duration-200"
+                            title="Visit website"
                           >
                             <ExternalLink className="h-4 w-4" />
                           </a>
