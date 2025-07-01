@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { Search, Loader2, ExternalLink, Code, DollarSign, Users } from 'lucide-react'
-import axios from 'axios'
 import './App.css'
 
 interface Company {
@@ -52,6 +51,8 @@ function App() {
   const [error, setError] = useState<string | null>(null)
   const [loadingStep, setLoadingStep] = useState(0)
   const [currentFact, setCurrentFact] = useState(0)
+  const [progress, setProgress] = useState(0)
+  const [currentMessage, setCurrentMessage] = useState('')
 
   // Loading progression effect
   useEffect(() => {
@@ -88,17 +89,61 @@ function App() {
     setLoading(true)
     setError(null)
     setResult(null)
+    setProgress(0)
+    setCurrentMessage('Starting research...')
 
     try {
-      const response = await axios.post<ResearchResponse>(`${API_BASE_URL}/research`, {
-        query: query.trim()
+      // Use fetch with streaming for real-time progress
+      const response = await fetch(`${API_BASE_URL}/research/stream`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query: query.trim() })
       })
-      setResult(response.data)
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const reader = response.body?.getReader()
+      const decoder = new TextDecoder()
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          const chunk = decoder.decode(value)
+          const lines = chunk.split('\n')
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6))
+
+                setProgress(data.progress)
+                setCurrentMessage(data.message)
+
+                if (data.step === 'result' && data.data) {
+                  setResult(data.data)
+                } else if (data.step === 'error') {
+                  setError(data.message)
+                }
+              } catch (e) {
+                console.error('Error parsing SSE data:', e)
+              }
+            }
+          }
+        }
+      }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'An error occurred while researching tools')
+      setError(err.message || 'An error occurred while researching tools')
     } finally {
       setLoading(false)
+      setProgress(0)
+      setCurrentMessage('')
     }
   }
 
@@ -194,15 +239,20 @@ function App() {
 
               {/* Loading message */}
               <h3 className="text-2xl font-semibold text-slate-700 mb-4 animate-pulse">
-                {loadingMessages[loadingStep]}
+                {currentMessage || loadingMessages[loadingStep]}
               </h3>
 
               {/* Progress bar */}
               <div className="w-full bg-slate-200 rounded-full h-2 mb-6 overflow-hidden">
                 <div
-                  className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-1000 ease-out"
-                  style={{ width: `${((loadingStep + 1) / loadingMessages.length) * 100}%` }}
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-500 ease-out"
+                  style={{ width: `${progress || ((loadingStep + 1) / loadingMessages.length) * 100}%` }}
                 ></div>
+              </div>
+
+              {/* Progress percentage */}
+              <div className="text-sm text-slate-500 mb-4">
+                {progress > 0 ? `${progress}% complete` : 'Initializing...'}
               </div>
 
               {/* Fun fact */}
