@@ -12,6 +12,10 @@ RUN npm ci --only=production
 # Copy source code
 COPY . .
 
+# Accept build arguments
+ARG VITE_API_BASE_URL=http://localhost:8000
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+
 # Build the app
 RUN npm run build
 
