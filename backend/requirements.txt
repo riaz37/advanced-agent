@@ -1,3 +1,5 @@
+fastapi
+uvicorn[standard]
 firecrawl-py
 langchain
 langchain-core
@@ -7,7 +9,7 @@ langgraph
 langsmith
 pydantic
 python-dotenv
-streamlit
 typing-extensions
 aiohttp
 httpx
+python-multipart
